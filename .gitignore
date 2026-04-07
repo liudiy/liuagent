@@ -1,0 +1,32 @@
+reference/
+.venv/
+test_venv*/
+__pycache__/
+*.pyc
+.env
+
+# Logs
+*.log
+
+# Caches and local testing
+.pytest_cache/
+.deepeval/
+*.json
+*.json.bak
+output/
+
+# Data and Databases (Do not upload large data or local DB files)
+data/
+deploy/
+chroma_db_*/
+mem0_storage/
+
+# Downloaded Models (Huge files, do not upload)
+bge-large-zh-v1.5/
+bge-m3/
+*.pkl
+
+# Build / Release packages
+*.zip
+
+

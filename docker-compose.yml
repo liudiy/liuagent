@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  tong-agent-backend:
+    build: .
+    container_name: tong-agent-backend
+    ports:
+      - "8000:8000"
+    environment:
+      - DASHSCOPE_API_KEY=${DASHSCOPE_API_KEY}
+      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}
+      - LANGFUSE_SECRET_KEY=${LANGFUSE_SECRET_KEY}
+      - LANGFUSE_PUBLIC_KEY=${LANGFUSE_PUBLIC_KEY}
+      - LANGFUSE_HOST=${LANGFUSE_HOST:-https://cloud.langfuse.com}
+    volumes:
+      - ./chroma_db_tongdata_v2:/app/chroma_db_tongdata_v2
+      - ./mem0_meta:/app/mem0_meta
+      - ./.env:/app/.env
+      - .:/app
+    # 强制让 FastAPI 绑定到 0.0.0.0，否则它可能只监听 127.0.0.1 导致外部连不上
+    command: uvicorn server:app --host 0.0.0.0 --port 8000
+    restart: always
+    # 添加健康检查，确保前端在后端就绪后连接
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  tong-agent-frontend:
+    build: .
+    container_name: tong-agent-frontend
+    ports:
+      - "8501:8501"
+    environment:
+      # 显式使用容器名作为主机名进行通信
+      - API_BASE_URL=http://tong-agent-backend:8000
+    volumes:
+      - .:/app
+    command: python -m streamlit run app.py --server.port 8501 --server.address 0.0.0.0
+    restart: always
+    depends_on:
+      tong-agent-backend:
+        condition: service_started
